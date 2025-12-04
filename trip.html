@@ -6,9 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <!-- Tailwind CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Vue 3 CDN -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Vue 3 CDN -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<!-- 共用資料 -->
+<script src="trip-data.js"></script>
+
 
   <style>
     :root {
@@ -624,29 +627,26 @@ const { createApp } = Vue;
 
 createApp({
   data() {
-    return {
-      tripTitle: '熊本 · 九州小旅行',
-      tripDate: '12/28 ～ 1/4',
-      currentMainView: 'packing',
-      currentDayIndex: 0,
-      myMapUrl: 'https://www.google.com/maps/d/u/0/edit?mid=1YXjJyNyDDuUmN8SwXTAgrjVtihAQwWk&usp=sharing',
+  const base = window.tripData || {};
+  return {
+    // 從共用資料來
+    tripTitle: base.tripTitle || '熊本 · 九州小旅行',
+    tripDate: base.tripDate || '12/28 ～ 1/4',
+    myMapUrl: base.myMapUrl || '',
+    flightInfo: base.flightInfo || { depart: {}, return: {} },
+    fx: base.fx || { rateTwdToJpy: 4.96, twd: '', jpy: '' },
+    days: base.days || [],
+    items: base.items || [],
+    nextId: base.nextId || 1000,
 
-      flightInfo: {
-        depart: {
-          date: '114/12/28',
-          weekday: '六',
-          time: '09:00',
-          flightNo: 'CI198',
-          route: '高雄 KHH → 熊本 KMJ'
-        },
-        return: {
-          date: '115/01/04',
-          weekday: '日',
-          time: '13:25',
-          flightNo: 'CI199',
-          route: '熊本 KMJ → 高雄 KHH'
-        }
-      },
+    // 本頁自己用的狀態
+    currentMainView: 'packing',
+    currentDayIndex: 0,
+    filterCategory: 'all',
+    newItemName: '',
+    newItemCategory: 'other'
+  };
+},
 
       fx: {
         rateTwdToJpy: 4.96,
@@ -928,3 +928,4 @@ createApp({
 
 </body>
 </html>
+
