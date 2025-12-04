@@ -93,4 +93,107 @@
       ></textarea>
     </section>
 
-    <!-- 資
+    <!-- 資訊卡片（可編輯內容） -->
+    <section class="grid grid-cols-3 gap-3 mb-6 text-[11px]">
+      <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
+        <span class="text-neutral-500 mb-1">旅程日期</span>
+        <input
+          v-model="info.date"
+          class="font-semibold text-neutral-900 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0"
+        />
+      </div>
+      <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
+        <span class="text-neutral-500 mb-1">主要地點</span>
+        <textarea
+          v-model="info.places"
+          rows="2"
+          class="font-semibold text-neutral-900 leading-snug bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 resize-none"
+        ></textarea>
+      </div>
+      <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
+        <span class="text-neutral-500 mb-1">檢視方式</span>
+        <textarea
+          v-model="info.viewMode"
+          rows="2"
+          class="font-semibold text-neutral-900 leading-snug bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 resize-none"
+        ></textarea>
+      </div>
+    </section>
+
+    <!-- CTA 區塊 -->
+    <section class="space-y-3">
+      <a
+        :href="cta.link"
+        class="block w-full text-center rounded-full bg-neutral-900 text-neutral-50 text-[13px] font-medium py-2.5 shadow-sm hover:bg-neutral-800 transition-colors"
+      >
+        {{ cta.text }}
+      </a>
+      <textarea
+        v-model="cta.note"
+        class="textarea-ghost text-[11px] text-neutral-600"
+      ></textarea>
+    </section>
+  </main>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      hero: {
+        journeyLabel: 'JOURNEY',
+        title: '熊本 · 九州小旅行',
+        dateSummary: '2025 冬 · 7 晚',
+        summary:
+          '這是一趟從熊本出發，串聯三角、福岡、門司港、由布院與阿蘇的冬季小旅行。用一個簡單的行動版頁面，幫你把每日路線、交通時間與必吃口袋名單整理好，手機打開就能直接看。 '
+      },
+      info: {
+        date: '12/28 ～ 1/4',
+        places: '熊本 · 福岡 · 由布院 · 阿蘇',
+        viewMode: '日程時間軸\n＋ Google 地圖'
+      },
+      cta: {
+        text: '查看詳細行程',
+        link: 'trip.html',
+        note:
+          '建議使用手機開啟，橫向旋轉可一次看更多內容。若有同行旅伴，可以直接把此網址分享給對方，一起對行程。'
+      }
+    };
+  },
+  created() {
+    this.loadLanding();
+  },
+  methods: {
+    saveLanding() {
+      const payload = {
+        hero: this.hero,
+        info: this.info,
+        cta: this.cta
+      };
+      try {
+        localStorage.setItem('kyushu-landing', JSON.stringify(payload)); // [web:110][web:115][web:135]
+        alert('首頁內容已儲存到此裝置瀏覽器');
+      } catch (e) {
+        console.error(e);
+        alert('儲存失敗，請確認瀏覽器是否允許 localStorage');
+      }
+    },
+    loadLanding() {
+      try {
+        const raw = localStorage.getItem('kyushu-landing'); // [web:110][web:115]
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data.hero) this.hero = data.hero;
+        if (data.info) this.info = data.info;
+        if (data.cta) this.cta = data.cta;
+      } catch (e) {
+        console.error('載入首頁 localStorage 失敗', e);
+      }
+    }
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
