@@ -184,7 +184,6 @@
         TRIP
       </div>
       <div class="flex flex-col">
-        <!-- 行程標題、日期可編輯 -->
         <input
           v-model="tripTitle"
           class="text-base font-semibold tracking-wide text-neutral-900 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0"
@@ -195,20 +194,28 @@
         />
       </div>
     </div>
-    <button
-      v-if="currentMainView === 'packing'"
-      class="text-[11px] px-3 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
-      @click="resetAllPacking"
-    >
-      清除勾選
-    </button>
-    <button
-      v-else
-      class="text-[11px] px-3 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
-      @click="openMyMap"
-    >
-      開啟我的地圖
-    </button>
+    <div class="flex items-center gap-2">
+      <button
+        class="text-[11px] px-3 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
+        @click="saveAll"
+      >
+        儲存
+      </button>
+      <button
+        v-if="currentMainView === 'packing'"
+        class="text-[11px] px-3 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
+        @click="resetAllPacking"
+      >
+        清除勾選
+      </button>
+      <button
+        v-else
+        class="text-[11px] px-3 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
+        @click="openMyMap"
+      >
+        地圖
+      </button>
+    </div>
   </header>
 
   <!-- Segmented Control -->
@@ -240,7 +247,7 @@
 
   <main class="flex-1 px-4 pb-5 space-y-4">
 
-    <!-- 航班卡片：packing + itinerary 共用，可編輯 -->
+    <!-- 航班卡片 -->
     <section
       class="muji-card px-4 pt-4 pb-3"
       v-if="currentMainView === 'packing' || currentMainView === 'itinerary'"
@@ -301,7 +308,7 @@
       </div>
     </section>
 
-    <!-- 匯率卡片：只在行程版面 -->
+    <!-- 匯率卡片：只在行程 -->
     <section
       class="muji-card px-4 pt-4 pb-3"
       v-if="currentMainView === 'itinerary'"
@@ -339,7 +346,7 @@
       </div>
     </section>
 
-    <!-- 行李清單模式（不含匯率） -->
+    <!-- 行李清單模式 -->
     <template v-if="currentMainView === 'packing'">
       <!-- 打包進度 -->
       <section class="muji-card px-4 pt-4 pb-3">
@@ -500,7 +507,7 @@
       </section>
     </template>
 
-    <!-- 行程模式：行程與航班都已可編輯 -->
+    <!-- 行程模式 -->
     <section
       v-if="currentMainView === 'itinerary'"
       class="muji-card px-4 pt-4 pb-3"
@@ -589,7 +596,7 @@
       </div>
     </section>
 
-    <!-- 地圖模式：不含匯率 -->
+    <!-- 地圖模式 -->
     <section
       v-if="currentMainView === 'map'"
       class="muji-card px-4 pt-4 pb-4 flex flex-col gap-3"
@@ -620,11 +627,10 @@ createApp({
     return {
       tripTitle: '熊本 · 九州小旅行',
       tripDate: '12/28 ～ 1/4',
-      currentMainView: 'packing', // packing / itinerary / map
+      currentMainView: 'packing',
       currentDayIndex: 0,
       myMapUrl: 'https://www.google.com/maps/d/u/0/edit?mid=1YXjJyNyDDuUmN8SwXTAgrjVtihAQwWk&usp=sharing',
 
-      // 航班資訊（可編輯）
       flightInfo: {
         depart: {
           date: '114/12/28',
@@ -642,14 +648,12 @@ createApp({
         }
       },
 
-      // 匯率資料：只在行程版面顯示
       fx: {
         rateTwdToJpy: 4.96,
         twd: '',
         jpy: ''
       },
 
-      // 行程（可編輯日期、城市、每一筆 stop）
       days: [
         {
           date: '12/28',
@@ -752,7 +756,6 @@ createApp({
         }
       ],
 
-      // 行李清單資料
       filterCategory: 'all',
       nextId: 1000,
       items: [
@@ -810,6 +813,9 @@ createApp({
       if (!this.totalCount) return 0;
       return Math.round((this.checkedCount / this.totalCount) * 100);
     }
+  },
+  created() {
+    this.loadAll();
   },
   methods: {
     openMyMap() {
@@ -881,6 +887,40 @@ createApp({
     },
     resetAllPacking() {
       for (const item of this.items) item.checked = false;
+    },
+    saveAll() {
+      const payload = {
+        tripTitle: this.tripTitle,
+        tripDate: this.tripDate,
+        flightInfo: this.flightInfo,
+        fx: this.fx,
+        days: this.days,
+        items: this.items,
+        nextId: this.nextId
+      };
+      try {
+        localStorage.setItem('kyushu-trip-data', JSON.stringify(payload)); // [web:51][web:111][web:114]
+        alert('已儲存行程與行李清單到此裝置瀏覽器');
+      } catch (e) {
+        console.error(e);
+        alert('儲存失敗，請確認瀏覽器是否允許 localStorage');
+      }
+    },
+    loadAll() {
+      try {
+        const raw = localStorage.getItem('kyushu-trip-data'); // [web:51][web:111]
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data.tripTitle) this.tripTitle = data.tripTitle;
+        if (data.tripDate) this.tripDate = data.tripDate;
+        if (data.flightInfo) this.flightInfo = data.flightInfo;
+        if (data.fx) this.fx = data.fx;
+        if (Array.isArray(data.days)) this.days = data.days;
+        if (Array.isArray(data.items)) this.items = data.items;
+        if (typeof data.nextId === 'number') this.nextId = data.nextId;
+      } catch (e) {
+        console.error('載入 localStorage 失敗', e);
+      }
     }
   }
 }).mount('#app');
