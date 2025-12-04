@@ -14,7 +14,6 @@
       color: #0f172a;
     }
 
-    /* 手繪福岡背景：紙張 + 圓形漸層 + 線稿 */
     .app-shell {
       min-height: 100vh;
       display: flex;
@@ -24,38 +23,74 @@
       position: relative;
       overflow: hidden;
       background:
-        radial-gradient(circle at 20% 10%, rgba(248, 250, 252, 0.95) 0, transparent 55%),
-        radial-gradient(circle at 80% 0%, rgba(96, 165, 250, 0.18) 0, transparent 60%),
-        radial-gradient(circle at 0% 60%, rgba(244, 114, 182, 0.22) 0, transparent 55%),
-        radial-gradient(circle at 100% 70%, rgba(52, 211, 153, 0.22) 0, transparent 55%),
         linear-gradient(135deg, #fdfcf7 0%, #f3f1e6 45%, #ebe6da 100%);
     }
 
-    /* 紙張噪點質感 */
     .app-shell::before {
       content: "";
       position: absolute;
       inset: -40px;
       background-image:
         radial-gradient(circle, rgba(15, 23, 42, 0.04) 1px, transparent 0),
-        radial-gradient(circle, rgba(15, 23, 42, 0.02) 0.8px, transparent 0);
+        radial-gradient(circle, rgba(15, 23, 42, 0.02) 0.9px, transparent 0);
       background-size: 18px 18px, 32px 32px;
       opacity: 0.55;
       mix-blend-mode: multiply;
       pointer-events: none;
     }
 
-    /* 手繪線稿：像河流 / 港灣輪廓 */
-    .app-shell::after {
-      content: "";
+    .fukuoka-layer {
+      pointer-events: none;
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at 15% 75%, rgba(37, 99, 235, 0.18) 0, transparent 55%),
-        conic-gradient(from 200deg at 90% 20%, rgba(15, 23, 42, 0.07), transparent 40%, rgba(15, 23, 42, 0.05), transparent 75%);
+        radial-gradient(circle at 82% 14%, rgba(56, 189, 248, 0.35) 0, transparent 55%),
+        radial-gradient(circle at 15% 80%, rgba(52, 211, 153, 0.35) 0, transparent 55%),
+        radial-gradient(circle at 0% 40%, rgba(244, 114, 182, 0.32) 0, transparent 55%),
+        radial-gradient(circle at 100% 65%, rgba(96, 165, 250, 0.32) 0, transparent 55%);
       opacity: 0.85;
-      mask-image: radial-gradient(circle at 50% 50%, black 0, transparent 65%);
-      pointer-events: none;
+      mask-image: radial-gradient(circle at 50% 50%, black 0, transparent 70%);
+    }
+
+    .fukuoka-layer::before {
+      content: "";
+      position: absolute;
+      width: 120px;
+      height: 260px;
+      right: 6%;
+      top: 12%;
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.12), transparent 60%),
+        repeating-linear-gradient(
+          -12deg,
+          rgba(30, 64, 175, 0.5),
+          rgba(30, 64, 175, 0.5) 3px,
+          transparent 3px,
+          transparent 7px
+        );
+      clip-path: polygon(50% 0, 70% 18%, 85% 100%, 15% 100%, 30% 18%);
+      opacity: 0.55;
+      filter: blur(0.3px);
+    }
+
+    .fukuoka-layer::after {
+      content: "";
+      position: absolute;
+      left: -10%;
+      bottom: -5%;
+      width: 140%;
+      height: 60%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.12) 0, transparent 55%),
+        conic-gradient(
+          from 210deg at 10% 40%,
+          rgba(15, 23, 42, 0.12),
+          transparent 40%,
+          rgba(15, 23, 42, 0.08),
+          transparent 75%
+        );
+      opacity: 0.8;
+      mask-image: radial-gradient(circle at 40% 0%, black 0, transparent 70%);
     }
 
     .muji-card {
@@ -82,6 +117,8 @@
 </head>
 <body class="antialiased text-neutral-900">
   <div class="app-shell">
+    <div class="fukuoka-layer"></div>
+
     <main class="muji-card relative z-10">
       <!-- 標誌區 -->
       <div class="flex items-center justify-between mb-5">
@@ -111,7 +148,7 @@
       </section>
 
       <!-- 資訊卡片 -->
-      <section class="grid grid-cols-3 gap-3 mb-6 text-[11px]">
+      <section class="grid grid-cols-3 gap-3 mb-5 text-[11px]">
         <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
           <span class="text-neutral-500 mb-1">旅程日期</span>
           <span class="font-semibold text-neutral-900">12/28 ～ 1/4</span>
@@ -127,6 +164,79 @@
           <span class="font-semibold text-neutral-900 leading-snug">
             日程時間軸<br />＋ Google 地圖
           </span>
+        </div>
+      </section>
+
+      <!-- 迷你 Timeline 預覽 -->
+      <section class="mb-5">
+        <p class="text-[11px] text-neutral-500 mb-2">行程一覽</p>
+        <div class="flex items-center gap-2 text-[11px] overflow-x-auto pb-1">
+          <!-- 橫向時間線 -->
+          <div class="flex items-center gap-2 flex-nowrap">
+            <!-- 每一天是一個 pill + 線 -->
+            <div class="flex items-center gap-2" >
+              <div class="flex flex-col items-center">
+                <span class="px-3 py-1 rounded-full bg-neutral-900 text-neutral-50 text-[10px] whitespace-nowrap">
+                  Day 1 熊本
+                </span>
+                <span class="mt-1 text-[10px] text-neutral-500">熊本城 · 城彩苑</span>
+              </div>
+              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col items-center">
+                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
+                  Day 2 三角
+                </span>
+                <span class="mt-1 text-[10px] text-neutral-500">三角西港 · 海港散步</span>
+              </div>
+              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col items-center">
+                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
+                  Day 3 福岡
+                </span>
+                <span class="mt-1 text-[10px] text-neutral-500">天神 · 太宰府</span>
+              </div>
+              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col items-center">
+                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
+                  Day 4 門司港
+                </span>
+                <span class="mt-1 text-[10px] text-neutral-500">懷舊街區 · 海景</span>
+              </div>
+              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col items-center">
+                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
+                  Day 5 由布院
+                </span>
+                <span class="mt-1 text-[10px] text-neutral-500">湯之坪街道 · 金鱗湖</span>
+              </div>
+              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col items-center">
+                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
+                  Day 6 阿蘇
+                </span>
+                <span class="mt-1 text-[10px] text-neutral-500">草千里 · 火山景觀</span>
+              </div>
+              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex flex-col items-center">
+                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
+                  Day 7 熊本
+                </span>
+                <span class="mt-1 text-[10px] text-neutral-500">市區散步 · 返回</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
