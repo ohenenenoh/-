@@ -4,8 +4,10 @@
   <meta charset="UTF-8" />
   <title>熊本 · 九州小旅行｜首頁</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 共用資料 -->
+  <script src="trip-data.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <style>
     body {
       margin: 0;
@@ -13,7 +15,6 @@
         sans-serif;
       color: #0f172a;
     }
-
     .app-shell {
       min-height: 100vh;
       display: flex;
@@ -25,7 +26,6 @@
       background:
         linear-gradient(135deg, #fdfcf7 0%, #f3f1e6 45%, #ebe6da 100%);
     }
-
     .app-shell::before {
       content: "";
       position: absolute;
@@ -38,20 +38,19 @@
       mix-blend-mode: multiply;
       pointer-events: none;
     }
-
     .fukuoka-layer {
       pointer-events: none;
       position: absolute;
       inset: 0;
       background:
+        radial-gradient(circle at 12% 18%, rgba(249, 115, 115, 0.32) 0, transparent 55%),
         radial-gradient(circle at 82% 14%, rgba(56, 189, 248, 0.35) 0, transparent 55%),
-        radial-gradient(circle at 15% 80%, rgba(52, 211, 153, 0.35) 0, transparent 55%),
-        radial-gradient(circle at 0% 40%, rgba(244, 114, 182, 0.32) 0, transparent 55%),
+        radial-gradient(circle at 18% 80%, rgba(52, 211, 153, 0.35) 0, transparent 55%),
+        radial-gradient(circle at 0% 48%, rgba(244, 114, 182, 0.32) 0, transparent 55%),
         radial-gradient(circle at 100% 65%, rgba(96, 165, 250, 0.32) 0, transparent 55%);
-      opacity: 0.85;
+      opacity: 0.9;
       mask-image: radial-gradient(circle at 50% 50%, black 0, transparent 70%);
     }
-
     .fukuoka-layer::before {
       content: "";
       position: absolute;
@@ -63,16 +62,15 @@
         linear-gradient(180deg, rgba(15, 23, 42, 0.12), transparent 60%),
         repeating-linear-gradient(
           -12deg,
-          rgba(30, 64, 175, 0.5),
-          rgba(30, 64, 175, 0.5) 3px,
+          rgba(30, 64, 175, 0.55),
+          rgba(30, 64, 175, 0.55) 3px,
           transparent 3px,
           transparent 7px
         );
       clip-path: polygon(50% 0, 70% 18%, 85% 100%, 15% 100%, 30% 18%);
-      opacity: 0.55;
+      opacity: 0.6;
       filter: blur(0.3px);
     }
-
     .fukuoka-layer::after {
       content: "";
       position: absolute;
@@ -89,10 +87,9 @@
           rgba(15, 23, 42, 0.08),
           transparent 75%
         );
-      opacity: 0.8;
+      opacity: 0.85;
       mask-image: radial-gradient(circle at 40% 0%, black 0, transparent 70%);
     }
-
     .muji-card {
       position: relative;
       background: #fbfbf7;
@@ -103,7 +100,6 @@
       padding: 1.75rem 1.5rem 1.5rem;
       backdrop-filter: blur(6px);
     }
-
     .muji-card::before {
       content: "";
       position: absolute;
@@ -116,7 +112,7 @@
   </style>
 </head>
 <body class="antialiased text-neutral-900">
-  <div class="app-shell">
+  <div id="landing" class="app-shell">
     <div class="fukuoka-layer"></div>
 
     <main class="muji-card relative z-10">
@@ -131,12 +127,12 @@
               JOURNEY
             </p>
             <h1 class="text-lg font-semibold tracking-wide text-neutral-900">
-              熊本 · 九州小旅行
+              {{ tripTitle }}
             </h1>
           </div>
         </div>
         <span class="text-[11px] text-neutral-500">
-          2025 冬 · 7 晚
+          {{ tripDate }} · {{ days.length }} 晚
         </span>
       </div>
 
@@ -151,7 +147,7 @@
       <section class="grid grid-cols-3 gap-3 mb-5 text-[11px]">
         <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
           <span class="text-neutral-500 mb-1">旅程日期</span>
-          <span class="font-semibold text-neutral-900">12/28 ～ 1/4</span>
+          <span class="font-semibold text-neutral-900">{{ tripDate }}</span>
         </div>
         <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
           <span class="text-neutral-500 mb-1">主要地點</span>
@@ -167,74 +163,33 @@
         </div>
       </section>
 
-      <!-- 迷你 Timeline 預覽 -->
+      <!-- 迷你 Timeline 預覽（共用 days 資料） -->
       <section class="mb-5">
         <p class="text-[11px] text-neutral-500 mb-2">行程一覽</p>
         <div class="flex items-center gap-2 text-[11px] overflow-x-auto pb-1">
-          <!-- 橫向時間線 -->
           <div class="flex items-center gap-2 flex-nowrap">
-            <!-- 每一天是一個 pill + 線 -->
-            <div class="flex items-center gap-2" >
-              <div class="flex flex-col items-center">
-                <span class="px-3 py-1 rounded-full bg-neutral-900 text-neutral-50 text-[10px] whitespace-nowrap">
-                  Day 1 熊本
+            <div
+              v-for="(day, index) in days"
+              :key="index"
+              class="flex items-center gap-2"
+            >
+              <div class="flex flex-col items-center max-w-[96px]">
+                <span
+                  class="px-3 py-1 rounded-full text-[10px] whitespace-nowrap"
+                  :class="index === 0
+                    ? 'bg-neutral-900 text-neutral-50'
+                    : 'bg-white text-neutral-800 border border-neutral-300'"
+                >
+                  Day {{ index + 1 }} {{ day.city }}
                 </span>
-                <span class="mt-1 text-[10px] text-neutral-500">熊本城 · 城彩苑</span>
-              </div>
-              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col items-center">
-                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
-                  Day 2 三角
+                <span class="mt-1 text-[10px] text-neutral-500 text-center line-clamp-2">
+                  {{ day.stops[0]?.title }}<span v-if="day.stops[1]"> · {{ day.stops[1].title }}</span>
                 </span>
-                <span class="mt-1 text-[10px] text-neutral-500">三角西港 · 海港散步</span>
               </div>
-              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col items-center">
-                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
-                  Day 3 福岡
-                </span>
-                <span class="mt-1 text-[10px] text-neutral-500">天神 · 太宰府</span>
-              </div>
-              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col items-center">
-                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
-                  Day 4 門司港
-                </span>
-                <span class="mt-1 text-[10px] text-neutral-500">懷舊街區 · 海景</span>
-              </div>
-              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col items-center">
-                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
-                  Day 5 由布院
-                </span>
-                <span class="mt-1 text-[10px] text-neutral-500">湯之坪街道 · 金鱗湖</span>
-              </div>
-              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col items-center">
-                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
-                  Day 6 阿蘇
-                </span>
-                <span class="mt-1 text-[10px] text-neutral-500">草千里 · 火山景觀</span>
-              </div>
-              <div class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"></div>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="flex flex-col items-center">
-                <span class="px-3 py-1 rounded-full bg-white text-neutral-800 border border-neutral-300 text-[10px] whitespace-nowrap">
-                  Day 7 熊本
-                </span>
-                <span class="mt-1 text-[10px] text-neutral-500">市區散步 · 返回</span>
-              </div>
+              <div
+                v-if="index < days.length - 1"
+                class="h-[1px] w-6 bg-neutral-300 flex-shrink-0"
+              ></div>
             </div>
           </div>
         </div>
@@ -254,5 +209,19 @@
       </section>
     </main>
   </div>
+
+  <script>
+  const { createApp } = Vue;
+  createApp({
+    data() {
+      const data = window.tripData || {};
+      return {
+        tripTitle: data.tripTitle || '熊本 · 九州小旅行',
+        tripDate: data.tripDate || '12/28 ～ 1/4',
+        days: data.days || []
+      };
+    }
+  }).mount('#landing');
+  </script>
 </body>
 </html>
