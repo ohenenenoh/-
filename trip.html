@@ -12,7 +12,6 @@
 
   <style>
     :root {
-      /* 食衣住行色票 */
       --food: #f97373;
       --clothes: #facc15;
       --stay: #60a5fa;
@@ -23,11 +22,8 @@
       --other: #a855f7;
     }
 
-    body {
-      background: #f5f3ec;
-    }
+    body { background: #f5f3ec; }
 
-    /* 手繪福岡背景：紙張 + 手繪圓與線條 */
     .app-shell {
       min-height: 100vh;
       max-width: 480px;
@@ -42,7 +38,6 @@
       overflow: hidden;
     }
 
-    /* 紙張質感 */
     .app-shell::before {
       content: "";
       position: absolute;
@@ -56,7 +51,6 @@
       pointer-events: none;
     }
 
-    /* 手繪線稿：代表福岡港灣 / 河流輪廓 */
     .app-shell::after {
       content: "";
       position: absolute;
@@ -78,7 +72,6 @@
     }
 
     .muji-card::before {
-      /* 手繪邊框效果 */
       content: "";
       position: absolute;
       inset: 6px;
@@ -105,15 +98,12 @@
       background: #f5f3ec;
     }
 
-    .scrollbar-thin::-webkit-scrollbar {
-      width: 4px;
-    }
+    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
     .scrollbar-thin::-webkit-scrollbar-thumb {
       background-color: rgba(156, 163, 175, 0.6);
       border-radius: 999px;
     }
 
-    /* 食衣住行色塊 */
     .tag-food { background-color: rgba(249, 115, 115, 0.15); color: #b91c1c; border-color: rgba(248, 113, 113, 0.65); }
     .tag-clothes { background-color: rgba(250, 204, 21, 0.18); color: #92400e; border-color: rgba(250, 204, 21, 0.7); }
     .tag-stay { background-color: rgba(96, 165, 250, 0.18); color: #1d4ed8; border-color: rgba(96, 165, 250, 0.7); }
@@ -151,6 +141,37 @@
       border-color: transparent;
       box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
     }
+
+    .input-ghost {
+      width: 100%;
+      border-radius: 999px;
+      border-width: 1px;
+      border-color: rgba(209, 213, 219, 0.9);
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 0.2rem 0.6rem;
+      font-size: 11px;
+    }
+    .input-ghost:focus {
+      outline: none;
+      box-shadow: 0 0 0 1px #0f172a33;
+      border-color: #6b7280;
+    }
+
+    .input-ghost-sm {
+      border-radius: 999px;
+      border-width: 1px;
+      border-color: rgba(209, 213, 219, 0.9);
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 0.1rem 0.5rem;
+      font-size: 11px;
+      max-width: 4.5rem;
+      text-align: center;
+    }
+    .input-ghost-sm:focus {
+      outline: none;
+      box-shadow: 0 0 0 1px #0f172a33;
+      border-color: #6b7280;
+    }
   </style>
 </head>
 <body class="antialiased text-neutral-900">
@@ -163,12 +184,15 @@
         TRIP
       </div>
       <div class="flex flex-col">
-        <h1 class="text-base font-semibold tracking-wide text-neutral-900">
-          {{ tripTitle }}
-        </h1>
-        <p class="text-[11px] text-neutral-600">
-          {{ tripDate }} · {{ days.length }} 天行程
-        </p>
+        <!-- 行程標題、日期可編輯 -->
+        <input
+          v-model="tripTitle"
+          class="text-base font-semibold tracking-wide text-neutral-900 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0"
+        />
+        <input
+          v-model="tripDate"
+          class="text-[11px] text-neutral-600 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 mt-0.5"
+        />
       </div>
     </div>
     <button
@@ -187,7 +211,7 @@
     </button>
   </header>
 
-  <!-- Segmented Control：行李清單 / 行程 / 地圖 -->
+  <!-- Segmented Control -->
   <div class="px-4 pb-3">
     <div class="bg-neutral-900/5 rounded-full p-1 flex text-[12px] border border-neutral-200/70">
       <button
@@ -216,41 +240,68 @@
 
   <main class="flex-1 px-4 pb-5 space-y-4">
 
-    <!-- 航班卡片：行李清單 + 行程 共用 -->
+    <!-- 航班卡片：packing + itinerary 共用，可編輯 -->
     <section
       class="muji-card px-4 pt-4 pb-3"
       v-if="currentMainView === 'packing' || currentMainView === 'itinerary'"
     >
       <div class="relative z-10">
-        <h2 class="text-sm font-semibold text-neutral-900 mb-2">航班資訊</h2>
+        <h2 class="text-sm font-semibold text-neutral-900 mb-2">航班資訊（可編輯）</h2>
         <div class="grid grid-cols-2 gap-3 text-[11px] text-neutral-700">
-          <div class="border border-neutral-200 rounded-2xl px-3 py-2 bg-white/80">
+          <!-- 去程 -->
+          <div class="border border-neutral-200 rounded-2xl px-3 py-2 bg-white/80 space-y-1.5">
             <p class="text-neutral-500 mb-1">去程</p>
-            <p class="font-medium">
-              {{ flightInfo.depart.date }}（{{ flightInfo.depart.weekday }}）
-            </p>
-            <p class="mt-0.5">出發時間：{{ flightInfo.depart.time }}</p>
-            <p class="mt-0.5">航班：{{ flightInfo.depart.flightNo }}</p>
-            <p class="mt-0.5 text-[10px] text-neutral-500">
-              {{ flightInfo.depart.route }}
-            </p>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">日期</span>
+              <input v-model="flightInfo.depart.date" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">星期</span>
+              <input v-model="flightInfo.depart.weekday" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">時間</span>
+              <input v-model="flightInfo.depart.time" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">航班</span>
+              <input v-model="flightInfo.depart.flightNo" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">航線</span>
+              <input v-model="flightInfo.depart.route" class="input-ghost" />
+            </div>
           </div>
-          <div class="border border-neutral-200 rounded-2xl px-3 py-2 bg-white/80">
+
+          <!-- 回程 -->
+          <div class="border border-neutral-200 rounded-2xl px-3 py-2 bg-white/80 space-y-1.5">
             <p class="text-neutral-500 mb-1">回程</p>
-            <p class="font-medium">
-              {{ flightInfo.return.date }}（{{ flightInfo.return.weekday }}）
-            </p>
-            <p class="mt-0.5">出發時間：{{ flightInfo.return.time }}</p>
-            <p class="mt-0.5">航班：{{ flightInfo.return.flightNo }}</p>
-            <p class="mt-0.5 text-[10px] text-neutral-500">
-              {{ flightInfo.return.route }}
-            </p>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">日期</span>
+              <input v-model="flightInfo.return.date" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">星期</span>
+              <input v-model="flightInfo.return.weekday" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">時間</span>
+              <input v-model="flightInfo.return.time" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">航班</span>
+              <input v-model="flightInfo.return.flightNo" class="input-ghost" />
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-neutral-500 whitespace-nowrap">航線</span>
+              <input v-model="flightInfo.return.route" class="input-ghost" />
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 匯率卡片：只在「行程」版面顯示 -->
+    <!-- 匯率卡片：只在行程版面 -->
     <section
       class="muji-card px-4 pt-4 pb-3"
       v-if="currentMainView === 'itinerary'"
@@ -288,9 +339,9 @@
       </div>
     </section>
 
-    <!-- 行李清單模式 -->
+    <!-- 行李清單模式（不含匯率） -->
     <template v-if="currentMainView === 'packing'">
-      <!-- 進度 + 類別篩選 -->
+      <!-- 打包進度 -->
       <section class="muji-card px-4 pt-4 pb-3">
         <div class="relative z-10 space-y-3">
           <div class="flex items-center justify-between">
@@ -315,72 +366,54 @@
               </button>
             </div>
           </div>
-
-          <!-- 進度條 -->
           <div class="w-full h-2.5 rounded-full bg-neutral-200/70 overflow-hidden">
             <div
               class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500 transition-all duration-300"
               :style="{ width: progressPercent + '%' }"
             ></div>
           </div>
-
-          <!-- 類別篩選 -->
           <div class="flex flex-wrap gap-2 text-[11px] text-neutral-700 mt-2">
             <button
               class="pill-filter"
               :class="filterCategory === 'all' ? 'pill-filter-active' : ''"
               @click="filterCategory = 'all'"
-            >
-              全部
-            </button>
+            >全部</button>
             <button
               class="pill-filter tag-food"
               :class="filterCategory === 'food' ? 'pill-filter-active' : ''"
               @click="filterCategory = 'food'"
-            >
-              食
-            </button>
+            >食</button>
             <button
               class="pill-filter tag-clothes"
               :class="filterCategory === 'clothes' ? 'pill-filter-active' : ''"
               @click="filterCategory = 'clothes'"
-            >
-              衣
-            </button>
+            >衣</button>
             <button
               class="pill-filter tag-stay"
               :class="filterCategory === 'stay' ? 'pill-filter-active' : ''"
               @click="filterCategory = 'stay'"
-            >
-              住
-            </button>
+            >住</button>
             <button
               class="pill-filter tag-transport"
               :class="filterCategory === 'transport' ? 'pill-filter-active' : ''"
               @click="filterCategory = 'transport'"
-            >
-              行
-            </button>
+            >行</button>
             <button
               class="pill-filter tag-other"
               :class="filterCategory === 'other' ? 'pill-filter-active' : ''"
               @click="filterCategory = 'other'"
-            >
-              其他
-            </button>
+            >其他</button>
           </div>
         </div>
       </section>
 
-      <!-- 行李項目列表 -->
+      <!-- 行李項目 -->
       <section class="muji-card px-4 pt-4 pb-3">
         <div class="relative z-10">
           <div class="flex items-center justify-between mb-2">
             <h2 class="text-sm font-semibold text-neutral-900">行李項目</h2>
             <span class="text-[11px] text-neutral-500">可自行新增 / 編輯</span>
           </div>
-
-          <!-- 新增項目 -->
           <div class="flex items-center gap-2 mb-3 text-[11px]">
             <input
               v-model="newItemName"
@@ -407,7 +440,6 @@
             </button>
           </div>
 
-          <!-- 清單列表 -->
           <div class="max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
             <div
               v-for="(group, gIndex) in groupedItems"
@@ -416,10 +448,7 @@
             >
               <div class="flex items-center justify-between mb-1">
                 <div class="flex items-center gap-2">
-                  <span
-                    class="tag-badge"
-                    :class="categoryClass(group.category)"
-                  >
+                  <span class="tag-badge" :class="categoryClass(group.category)">
                     {{ categoryLabel(group.category) }}
                   </span>
                   <p class="text-[11px] text-neutral-500">
@@ -430,15 +459,11 @@
                   <button
                     class="px-2 py-0.5 rounded-full border border-neutral-300 bg-white/80"
                     @click="toggleGroup(group.category, true)"
-                  >
-                    全選
-                  </button>
+                  >全選</button>
                   <button
                     class="px-2 py-0.5 rounded-full border border-neutral-300 bg-white/80"
                     @click="toggleGroup(group.category, false)"
-                  >
-                    全不選
-                  </button>
+                  >全不選</button>
                 </div>
               </div>
 
@@ -475,13 +500,12 @@
       </section>
     </template>
 
-    <!-- 行程模式 -->
+    <!-- 行程模式：行程與航班都已可編輯 -->
     <section
       v-if="currentMainView === 'itinerary'"
       class="muji-card px-4 pt-4 pb-3"
     >
       <div class="relative z-10">
-        <!-- 日期選擇 + 標籤 legend -->
         <div class="flex items-center justify-between mb-3 gap-2">
           <div class="flex gap-2 overflow-x-auto scrollbar-thin pr-1">
             <button
@@ -496,12 +520,18 @@
               第 {{ index + 1 }} 天
             </button>
           </div>
-          <div class="text-[11px] text-right text-neutral-500 min-w-[120px]">
-            {{ currentDay.date }} · {{ currentDay.city }}
+          <div class="text-[11px] text-right text-neutral-500 min-w-[120px] flex flex-col">
+            <input
+              v-model="currentDay.date"
+              class="bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 mb-0.5"
+            />
+            <input
+              v-model="currentDay.city"
+              class="bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0"
+            />
           </div>
         </div>
 
-        <!-- 食衣住行圖例 -->
         <div class="flex flex-wrap gap-2 mb-3 text-[10px] text-neutral-600">
           <span class="tag-badge tag-food">食</span>
           <span class="tag-badge tag-clothes">衣 / 逛街</span>
@@ -511,7 +541,6 @@
           <span class="tag-badge tag-free">自由</span>
         </div>
 
-        <!-- 時間軸行程 -->
         <div class="max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
           <ol class="relative border-l border-neutral-200 pl-4">
             <li
@@ -521,19 +550,23 @@
             >
               <div class="absolute -left-[6px] mt-1 timeline-dot"></div>
               <div class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="text-[11px] font-medium text-neutral-500">
-                    {{ item.time }}
-                  </p>
-                  <p class="text-sm font-semibold text-neutral-900 mt-0.5">
-                    {{ item.title }}
-                  </p>
-                  <p v-if="item.note" class="text-[11px] text-neutral-500 mt-0.5">
-                    {{ item.note }}
-                  </p>
+                <div class="space-y-1">
+                  <input
+                    v-model="item.time"
+                    class="input-ghost-sm text-[11px] font-medium text-neutral-600"
+                  />
+                  <input
+                    v-model="item.title"
+                    class="input-ghost text-sm font-semibold text-neutral-900"
+                  />
+                  <textarea
+                    v-model="item.note"
+                    rows="2"
+                    class="w-full rounded-2xl border border-neutral-200 bg-white/80 px-2 py-1 text-[11px] text-neutral-600 mt-0.5 resize-none focus:outline-none focus:ring-1 focus:ring-neutral-400"
+                    placeholder="備註（可留空）"
+                  ></textarea>
                 </div>
                 <div class="flex flex-col items-end gap-1">
-                  <!-- 食衣住行色塊 -->
                   <span
                     v-if="item.category"
                     class="tag-badge"
@@ -541,13 +574,6 @@
                   >
                     {{ categoryLabel(item.category) }}
                   </span>
-                  <span
-                    v-else-if="item.tag"
-                    class="muji-pill text-[10px]"
-                  >
-                    {{ item.tag }}
-                  </span>
-
                   <button
                     v-if="item.mapUrl"
                     class="text-[10px] text-sky-700 underline underline-offset-2"
@@ -563,7 +589,7 @@
       </div>
     </section>
 
-    <!-- 地圖模式 -->
+    <!-- 地圖模式：不含匯率 -->
     <section
       v-if="currentMainView === 'map'"
       class="muji-card px-4 pt-4 pb-4 flex flex-col gap-3"
@@ -598,7 +624,7 @@ createApp({
       currentDayIndex: 0,
       myMapUrl: 'https://www.google.com/maps/d/u/0/edit?mid=1YXjJyNyDDuUmN8SwXTAgrjVtihAQwWk&usp=sharing',
 
-      // 航班資訊
+      // 航班資訊（可編輯）
       flightInfo: {
         depart: {
           date: '114/12/28',
@@ -616,14 +642,14 @@ createApp({
         }
       },
 
-      // 匯率資料
+      // 匯率資料：只在行程版面顯示
       fx: {
         rateTwdToJpy: 4.96,
         twd: '',
         jpy: ''
       },
 
-      // 行程
+      // 行程（可編輯日期、城市、每一筆 stop）
       days: [
         {
           date: '12/28',
@@ -730,34 +756,25 @@ createApp({
       filterCategory: 'all',
       nextId: 1000,
       items: [
-        // 食
         { id: 1, name: '保溫瓶 / 水壺', category: 'food', checked: false },
         { id: 2, name: '隨身零食（堅果、能量棒）', category: 'food', checked: false },
         { id: 3, name: '胃藥、消化錠', category: 'food', checked: false },
-
-        // 衣
         { id: 10, name: '外套（防風、防雨）', category: 'clothes', checked: false },
         { id: 11, name: '上衣與褲子（依天數準備）', category: 'clothes', checked: false },
         { id: 12, name: '襪子與內衣褲', category: 'clothes', checked: false },
         { id: 13, name: '睡衣', category: 'clothes', checked: false },
         { id: 14, name: '帽子 / 圍巾 / 手套', category: 'clothes', checked: false },
-
-        // 住
         { id: 20, name: '牙刷牙膏 / 牙線', category: 'stay', checked: false },
         { id: 21, name: '洗面乳 / 卸妝用品', category: 'stay', checked: false },
         { id: 22, name: '保養品（化妝水、乳液）', category: 'stay', checked: false },
         { id: 23, name: '隱形眼鏡與保養液', category: 'stay', checked: false },
         { id: 24, name: '小毛巾、洗澡用品', category: 'stay', checked: false },
-
-        // 行
         { id: 30, name: '護照與影本', category: 'transport', checked: false },
         { id: 31, name: '身分證 / 健保卡', category: 'transport', checked: false },
         { id: 32, name: '機票 / 電子機票截圖', category: 'transport', checked: false },
         { id: 33, name: 'JR Pass / 車票 / IC 卡', category: 'transport', checked: false },
         { id: 34, name: '錢包（現金 / 信用卡）', category: 'transport', checked: false },
         { id: 35, name: '國內外駕照（若需開車）', category: 'transport', checked: false },
-
-        // 其他
         { id: 40, name: '手機與充電線', category: 'other', checked: false },
         { id: 41, name: '行動電源', category: 'other', checked: false },
         { id: 42, name: '相機 / 記憶卡 / 充電器', category: 'other', checked: false },
@@ -775,62 +792,40 @@ createApp({
       return this.days[this.currentDayIndex];
     },
     filteredItems() {
-      if (this.filterCategory === 'all') {
-        return this.items;
-      }
-      return this.items.filter(item => item.category === this.filterCategory);
+      return this.filterCategory === 'all'
+        ? this.items
+        : this.items.filter(item => item.category === this.filterCategory);
     },
     groupedItems() {
       const groups = {};
       for (const item of this.filteredItems) {
-        if (!groups[item.category]) {
-          groups[item.category] = [];
-        }
+        if (!groups[item.category]) groups[item.category] = [];
         groups[item.category].push(item);
       }
-      return Object.keys(groups).map(cat => ({
-        category: cat,
-        items: groups[cat]
-      }));
+      return Object.keys(groups).map(cat => ({ category: cat, items: groups[cat] }));
     },
-    totalCount() {
-      return this.items.length;
-    },
-    checkedCount() {
-      return this.items.filter(i => i.checked).length;
-    },
+    totalCount() { return this.items.length; },
+    checkedCount() { return this.items.filter(i => i.checked).length; },
     progressPercent() {
-      if (this.totalCount === 0) return 0;
+      if (!this.totalCount) return 0;
       return Math.round((this.checkedCount / this.totalCount) * 100);
     }
   },
   methods: {
     openMyMap() {
-      if (this.myMapUrl) {
-        window.open(this.myMapUrl, '_blank');
-      }
+      if (this.myMapUrl) window.open(this.myMapUrl, '_blank');
     },
     openExternalMap(url) {
       window.open(url, '_blank');
     },
     updateFromTwd() {
       const v = parseFloat(this.fx.twd);
-      if (isNaN(v)) {
-        this.fx.jpy = '';
-        return;
-      }
+      if (isNaN(v)) { this.fx.jpy = ''; return; }
       this.fx.jpy = Math.round(v * this.fx.rateTwdToJpy);
     },
     updateFromJpy() {
       const v = parseFloat(this.fx.jpy);
-      if (isNaN(v)) {
-        this.fx.twd = '';
-        return;
-      }
-      if (!this.fx.rateTwdToJpy) {
-        this.fx.twd = '';
-        return;
-      }
+      if (isNaN(v) || !this.fx.rateTwdToJpy) { this.fx.twd = ''; return; }
       this.fx.twd = (v / this.fx.rateTwdToJpy).toFixed(0);
     },
     categoryClass(cat) {
@@ -875,20 +870,17 @@ createApp({
     },
     toggleGroup(category, checked) {
       for (const item of this.items) {
-        if (item.category === category && (this.filterCategory === 'all' || this.filterCategory === category)) {
+        if (item.category === category &&
+          (this.filterCategory === 'all' || this.filterCategory === category)) {
           item.checked = checked;
         }
       }
     },
     checkAllVisible(checked) {
-      for (const item of this.filteredItems) {
-        item.checked = checked;
-      }
+      for (const item of this.filteredItems) item.checked = checked;
     },
     resetAllPacking() {
-      for (const item of this.items) {
-        item.checked = false;
-      }
+      for (const item of this.items) item.checked = false;
     }
   }
 }).mount('#app');
