@@ -6,194 +6,143 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Vue 3 CDN -->
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <style>
     body {
-      background: radial-gradient(circle at top, #fdfdf8 0, #f3f1e6 40%, #ebe6da 100%);
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+        sans-serif;
+      color: #0f172a;
     }
+
+    /* 手繪福岡背景：紙張 + 圓形漸層 + 線稿 */
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(248, 250, 252, 0.95) 0, transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(96, 165, 250, 0.18) 0, transparent 60%),
+        radial-gradient(circle at 0% 60%, rgba(244, 114, 182, 0.22) 0, transparent 55%),
+        radial-gradient(circle at 100% 70%, rgba(52, 211, 153, 0.22) 0, transparent 55%),
+        linear-gradient(135deg, #fdfcf7 0%, #f3f1e6 45%, #ebe6da 100%);
+    }
+
+    /* 紙張噪點質感 */
+    .app-shell::before {
+      content: "";
+      position: absolute;
+      inset: -40px;
+      background-image:
+        radial-gradient(circle, rgba(15, 23, 42, 0.04) 1px, transparent 0),
+        radial-gradient(circle, rgba(15, 23, 42, 0.02) 0.8px, transparent 0);
+      background-size: 18px 18px, 32px 32px;
+      opacity: 0.55;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    /* 手繪線稿：像河流 / 港灣輪廓 */
+    .app-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 75%, rgba(37, 99, 235, 0.18) 0, transparent 55%),
+        conic-gradient(from 200deg at 90% 20%, rgba(15, 23, 42, 0.07), transparent 40%, rgba(15, 23, 42, 0.05), transparent 75%);
+      opacity: 0.85;
+      mask-image: radial-gradient(circle at 50% 50%, black 0, transparent 65%);
+      pointer-events: none;
+    }
+
     .muji-card {
+      position: relative;
       background: #fbfbf7;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.10);
-    }
-    .input-ghost {
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+      border-radius: 1.5rem;
+      max-width: 28rem;
       width: 100%;
-      border-radius: 999px;
-      border-width: 1px;
-      border-color: rgba(209, 213, 219, 0.9);
-      background-color: rgba(255, 255, 255, 0.0);
-      padding: 0.1rem 0.2rem;
-      font-size: inherit;
+      padding: 1.75rem 1.5rem 1.5rem;
+      backdrop-filter: blur(6px);
     }
-    .input-ghost:focus {
-      outline: none;
-      box-shadow: 0 0 0 1px #0f172a33;
-      border-color: #9ca3af;
-      background-color: rgba(255,255,255,0.7);
-    }
-    .textarea-ghost {
-      width: 100%;
-      border-radius: 1rem;
-      border-width: 1px;
-      border-color: rgba(209, 213, 219, 0.9);
-      background-color: rgba(255, 255, 255, 0.6);
-      padding: 0.6rem 0.8rem;
-      font-size: 0.875rem;
-      line-height: 1.5;
-      resize: vertical;
-      min-height: 4rem;
-    }
-    .textarea-ghost:focus {
-      outline: none;
-      box-shadow: 0 0 0 1px #0f172a33;
-      border-color: #9ca3af;
-      background-color: rgba(255,255,255,0.9);
+
+    .muji-card::before {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 1.35rem;
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+      opacity: 0.8;
+      pointer-events: none;
     }
   </style>
 </head>
 <body class="antialiased text-neutral-900">
-<div id="app" class="min-h-screen flex items-center justify-center px-4">
-  <main class="muji-card max-w-md w-full rounded-3xl px-6 pt-7 pb-6">
-    <!-- 標誌區 -->
-    <div class="flex items-center justify-between mb-5">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-neutral-900 text-neutral-50 flex items-center justify-center text-xs tracking-[0.18em]">
-          TRIP
+  <div class="app-shell">
+    <main class="muji-card relative z-10">
+      <!-- 標誌區 -->
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-neutral-900 text-neutral-50 flex items-center justify-center text-xs tracking-[0.18em]">
+            TRIP
+          </div>
+          <div class="flex flex-col">
+            <p class="text-[11px] uppercase tracking-[0.2em] text-neutral-500">
+              JOURNEY
+            </p>
+            <h1 class="text-lg font-semibold tracking-wide text-neutral-900">
+              熊本 · 九州小旅行
+            </h1>
+          </div>
         </div>
-        <div class="flex flex-col">
-          <input
-            v-model="hero.journeyLabel"
-            class="text-[11px] uppercase tracking-[0.2em] text-neutral-500 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0"
-          />
-          <input
-            v-model="hero.title"
-            class="text-lg font-semibold tracking-wide text-neutral-900 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 mt-0.5"
-          />
-        </div>
+        <span class="text-[11px] text-neutral-500">
+          2025 冬 · 7 晚
+        </span>
       </div>
-      <div class="flex flex-col items-end gap-1">
-        <input
-          v-model="hero.dateSummary"
-          class="text-[11px] text-neutral-500 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 text-right"
-        />
-        <button
-          class="text-[10px] mt-1 px-2 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
-          @click="saveLanding"
+
+      <!-- 旅程摘要 -->
+      <section class="mb-5">
+        <p class="text-sm text-neutral-700 leading-relaxed">
+          這是一趟從熊本出發，串聯三角、福岡、門司港、由布院與阿蘇的冬季小旅行。用一個簡單的行動版頁面，幫你把每日路線、交通時間與必吃口袋名單整理好，手機打開就能直接看。
+        </p>
+      </section>
+
+      <!-- 資訊卡片 -->
+      <section class="grid grid-cols-3 gap-3 mb-6 text-[11px]">
+        <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
+          <span class="text-neutral-500 mb-1">旅程日期</span>
+          <span class="font-semibold text-neutral-900">12/28 ～ 1/4</span>
+        </div>
+        <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
+          <span class="text-neutral-500 mb-1">主要地點</span>
+          <span class="font-semibold text-neutral-900 leading-snug">
+            熊本 · 福岡 · 由布院 · 阿蘇
+          </span>
+        </div>
+        <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
+          <span class="text-neutral-500 mb-1">檢視方式</span>
+          <span class="font-semibold text-neutral-900 leading-snug">
+            日程時間軸<br />＋ Google 地圖
+          </span>
+        </div>
+      </section>
+
+      <!-- CTA 區塊 -->
+      <section class="space-y-3">
+        <a
+          href="trip.html"
+          class="block w-full text-center rounded-full bg-neutral-900 text-neutral-50 text-[13px] font-medium py-2.5 shadow-sm hover:bg-neutral-800 transition-colors"
         >
-          儲存
-        </button>
-      </div>
-    </div>
-
-    <!-- 旅程摘要，可編輯 -->
-    <section class="mb-5">
-      <textarea
-        v-model="hero.summary"
-        class="textarea-ghost"
-      ></textarea>
-    </section>
-
-    <!-- 資訊卡片（可編輯內容） -->
-    <section class="grid grid-cols-3 gap-3 mb-6 text-[11px]">
-      <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
-        <span class="text-neutral-500 mb-1">旅程日期</span>
-        <input
-          v-model="info.date"
-          class="font-semibold text-neutral-900 bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0"
-        />
-      </div>
-      <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
-        <span class="text-neutral-500 mb-1">主要地點</span>
-        <textarea
-          v-model="info.places"
-          rows="2"
-          class="font-semibold text-neutral-900 leading-snug bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 resize-none"
-        ></textarea>
-      </div>
-      <div class="rounded-2xl border border-neutral-200 bg-white/70 px-3 py-2.5 flex flex-col justify-between">
-        <span class="text-neutral-500 mb-1">檢視方式</span>
-        <textarea
-          v-model="info.viewMode"
-          rows="2"
-          class="font-semibold text-neutral-900 leading-snug bg-transparent border-none focus:outline-none focus:ring-0 px-0 py-0 resize-none"
-        ></textarea>
-      </div>
-    </section>
-
-    <!-- CTA 區塊 -->
-    <section class="space-y-3">
-      <a
-        :href="cta.link"
-        class="block w-full text-center rounded-full bg-neutral-900 text-neutral-50 text-[13px] font-medium py-2.5 shadow-sm hover:bg-neutral-800 transition-colors"
-      >
-        {{ cta.text }}
-      </a>
-      <textarea
-        v-model="cta.note"
-        class="textarea-ghost text-[11px] text-neutral-600"
-      ></textarea>
-    </section>
-  </main>
-</div>
-
-<script>
-const { createApp } = Vue;
-
-createApp({
-  data() {
-    return {
-      hero: {
-        journeyLabel: 'JOURNEY',
-        title: '熊本 · 九州小旅行',
-        dateSummary: '2025 冬 · 7 晚',
-        summary:
-          '這是一趟從熊本出發，串聯三角、福岡、門司港、由布院與阿蘇的冬季小旅行。用一個簡單的行動版頁面，幫你把每日路線、交通時間與必吃口袋名單整理好，手機打開就能直接看。 '
-      },
-      info: {
-        date: '12/28 ～ 1/4',
-        places: '熊本 · 福岡 · 由布院 · 阿蘇',
-        viewMode: '日程時間軸\n＋ Google 地圖'
-      },
-      cta: {
-        text: '查看詳細行程',
-        link: 'trip.html',
-        note:
-          '建議使用手機開啟，橫向旋轉可一次看更多內容。若有同行旅伴，可以直接把此網址分享給對方，一起對行程。'
-      }
-    };
-  },
-  created() {
-    this.loadLanding();
-  },
-  methods: {
-    saveLanding() {
-      const payload = {
-        hero: this.hero,
-        info: this.info,
-        cta: this.cta
-      };
-      try {
-        localStorage.setItem('kyushu-landing', JSON.stringify(payload)); // [web:110][web:115][web:135]
-        alert('首頁內容已儲存到此裝置瀏覽器');
-      } catch (e) {
-        console.error(e);
-        alert('儲存失敗，請確認瀏覽器是否允許 localStorage');
-      }
-    },
-    loadLanding() {
-      try {
-        const raw = localStorage.getItem('kyushu-landing'); // [web:110][web:115]
-        if (!raw) return;
-        const data = JSON.parse(raw);
-        if (data.hero) this.hero = data.hero;
-        if (data.info) this.info = data.info;
-        if (data.cta) this.cta = data.cta;
-      } catch (e) {
-        console.error('載入首頁 localStorage 失敗', e);
-      }
-    }
-  }
-}).mount('#app');
-</script>
+          查看詳細行程
+        </a>
+        <p class="text-[11px] text-neutral-500 text-center">
+          建議使用手機開啟，橫向旋轉可一次看更多內容。若有同行旅伴，可以直接把此網址分享給對方，一起對行程。
+        </p>
+      </section>
+    </main>
+  </div>
 </body>
 </html>
