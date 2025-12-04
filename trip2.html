@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>熊本 · 九州行程 · 行動版</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <style>
+    :root {
+      /* 食衣住行色票 */
+      --food: #f97373;
+      --clothes: #facc15;
+      --stay: #60a5fa;
+      --transport: #22c55e;
+      --free: #a855f7;
+      --sight: #f97316;
+      --shopping: #ec4899;
+      --other: #a855f7;
+    }
+
+    body {
+      background: #f5f3ec;
+    }
+
+    /* 手繪福岡背景：紙張 + 手繪圓與線條 */
+    .app-shell {
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(248, 250, 252, 0.95) 0, transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(96, 165, 250, 0.18) 0, transparent 60%),
+        radial-gradient(circle at 0% 60%, rgba(244, 114, 182, 0.22) 0, transparent 55%),
+        radial-gradient(circle at 100% 70%, rgba(52, 211, 153, 0.22) 0, transparent 55%),
+        linear-gradient(135deg, #fdfcf7 0%, #f3f1e6 45%, #ebe6da 100%);
+      overflow: hidden;
+    }
+
+    /* 紙張質感 */
+    .app-shell::before {
+      content: "";
+      position: absolute;
+      inset: -40px;
+      background-image:
+        radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 0),
+        radial-gradient(circle, rgba(0, 0, 0, 0.02) 0.8px, transparent 0);
+      background-size: 18px 18px, 32px 32px;
+      opacity: 0.55;
+      mix-blend-mode: multiply;
+      pointer-events: none;
+    }
+
+    /* 手繪線稿：代表福岡港灣 / 河流輪廓 */
+    .app-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 75%, rgba(37, 99, 235, 0.18) 0, transparent 55%),
+        conic-gradient(from 200deg at 90% 20%, rgba(15, 23, 42, 0.07), transparent 40%, rgba(15, 23, 42, 0.05), transparent 75%);
+      opacity: 0.85;
+      mask-image: radial-gradient(circle at 50% 50%, black 0, transparent 65%);
+      pointer-events: none;
+    }
+
+    .muji-card {
+      position: relative;
+      background: #fbfbf7;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      border-radius: 1.5rem;
+      backdrop-filter: blur(6px);
+    }
+
+    .muji-card::before {
+      /* 手繪邊框效果 */
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 1.35rem;
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .muji-pill {
+      border-radius: 999px;
+      border-width: 1px;
+      border-style: solid;
+      border-color: rgba(148, 163, 184, 0.4);
+      padding: 0.3rem 0.8rem;
+      background: #ffffffc4;
+    }
+
+    .timeline-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 999px;
+      border: 2px solid #0f172a;
+      background: #f5f3ec;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 4px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: rgba(156, 163, 175, 0.6);
+      border-radius: 999px;
+    }
+
+    /* 食衣住行色塊 */
+    .tag-food { background-color: rgba(249, 115, 115, 0.15); color: #b91c1c; border-color: rgba(248, 113, 113, 0.65); }
+    .tag-clothes { background-color: rgba(250, 204, 21, 0.18); color: #92400e; border-color: rgba(250, 204, 21, 0.7); }
+    .tag-stay { background-color: rgba(96, 165, 250, 0.18); color: #1d4ed8; border-color: rgba(96, 165, 250, 0.7); }
+    .tag-transport { background-color: rgba(34, 197, 94, 0.18); color: #166534; border-color: rgba(34, 197, 94, 0.7); }
+    .tag-free { background-color: rgba(168, 85, 247, 0.16); color: #6b21a8; border-color: rgba(168, 85, 247, 0.7); }
+    .tag-sight { background-color: rgba(249, 115, 22, 0.16); color: #c2410c; border-color: rgba(249, 115, 22, 0.7); }
+    .tag-shopping { background-color: rgba(236, 72, 153, 0.16); color: #9d174d; border-color: rgba(236, 72, 153, 0.7); }
+    .tag-other { background-color: rgba(168, 85, 247, 0.16); color: #6b21a8; border-color: rgba(168, 85, 247, 0.7); }
+
+    .tag-badge {
+      padding: 0.18rem 0.6rem;
+      border-radius: 999px;
+      border-width: 1px;
+      border-style: solid;
+      font-size: 10px;
+      line-height: 1.1;
+      white-space: nowrap;
+      background: #ffffffd0;
+    }
+
+    .pill-filter {
+      border-radius: 999px;
+      border-width: 1px;
+      border-style: solid;
+      border-color: rgba(148, 163, 184, 0.5);
+      background: #ffffffba;
+      padding: 0.25rem 0.8rem;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .pill-filter-active {
+      background: #0f172a;
+      color: #f9fafb;
+      border-color: transparent;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
+    }
+  </style>
+</head>
+<body class="antialiased text-neutral-900">
+<div id="app" class="app-shell flex flex-col relative z-10">
+
+  <!-- Top App Bar -->
+  <header class="px-4 pt-5 pb-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-2xl bg-neutral-900 text-neutral-50 flex items-center justify-center text-xs tracking-[0.18em]">
+        TRIP
+      </div>
+      <div class="flex flex-col">
+        <h1 class="text-base font-semibold tracking-wide text-neutral-900">
+          {{ tripTitle }}
+        </h1>
+        <p class="text-[11px] text-neutral-600">
+          {{ tripDate }} · {{ days.length }} 天行程
+        </p>
+      </div>
+    </div>
+    <button
+      v-if="currentMainView === 'packing'"
+      class="text-[11px] px-3 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
+      @click="resetAllPacking"
+    >
+      清除勾選
+    </button>
+    <button
+      v-else
+      class="text-[11px] px-3 py-1 rounded-full border border-neutral-200 bg-white/80 text-neutral-700 shadow-sm"
+      @click="openMyMap"
+    >
+      開啟我的地圖
+    </button>
+  </header>
+
+  <!-- Segmented Control：行李清單 / 行程 / 地圖 -->
+  <div class="px-4 pb-3">
+    <div class="bg-neutral-900/5 rounded-full p-1 flex text-[12px] border border-neutral-200/70">
+      <button
+        class="flex-1 py-1.5 rounded-full transition-colors"
+        :class="currentMainView === 'packing' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500'"
+        @click="currentMainView = 'packing'"
+      >
+        行李清單
+      </button>
+      <button
+        class="flex-1 py-1.5 rounded-full transition-colors"
+        :class="currentMainView === 'itinerary' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500'"
+        @click="currentMainView = 'itinerary'"
+      >
+        行程
+      </button>
+      <button
+        class="flex-1 py-1.5 rounded-full transition-colors"
+        :class="currentMainView === 'map' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500'"
+        @click="currentMainView = 'map'"
+      >
+        地圖
+      </button>
+    </div>
+  </div>
+
+  <main class="flex-1 px-4 pb-5 space-y-4">
+
+    <!-- 航班卡片：行李清單 + 行程 共用 -->
+    <section
+      class="muji-card px-4 pt-4 pb-3"
+      v-if="currentMainView === 'packing' || currentMainView === 'itinerary'"
+    >
+      <div class="relative z-10">
+        <h2 class="text-sm font-semibold text-neutral-900 mb-2">航班資訊</h2>
+        <div class="grid grid-cols-2 gap-3 text-[11px] text-neutral-700">
+          <div class="border border-neutral-200 rounded-2xl px-3 py-2 bg-white/80">
+            <p class="text-neutral-500 mb-1">去程</p>
+            <p class="font-medium">
+              {{ flightInfo.depart.date }}（{{ flightInfo.depart.weekday }}）
+            </p>
+            <p class="mt-0.5">出發時間：{{ flightInfo.depart.time }}</p>
+            <p class="mt-0.5">航班：{{ flightInfo.depart.flightNo }}</p>
+            <p class="mt-0.5 text-[10px] text-neutral-500">
+              {{ flightInfo.depart.route }}
+            </p>
+          </div>
+          <div class="border border-neutral-200 rounded-2xl px-3 py-2 bg-white/80">
+            <p class="text-neutral-500 mb-1">回程</p>
+            <p class="font-medium">
+              {{ flightInfo.return.date }}（{{ flightInfo.return.weekday }}）
+            </p>
+            <p class="mt-0.5">出發時間：{{ flightInfo.return.time }}</p>
+            <p class="mt-0.5">航班：{{ flightInfo.return.flightNo }}</p>
+            <p class="mt-0.5 text-[10px] text-neutral-500">
+              {{ flightInfo.return.route }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 匯率卡片：只在「行程」版面顯示 -->
+    <section
+      class="muji-card px-4 pt-4 pb-3"
+      v-if="currentMainView === 'itinerary'"
+    >
+      <div class="relative z-10">
+        <h2 class="text-sm font-semibold text-neutral-900 mb-2">匯率小工具</h2>
+        <p class="text-[11px] text-neutral-500 mb-2">
+          目前預設：1 TWD ≈ {{ fx.rateTwdToJpy }} JPY（可依實際匯率自行修改）
+        </p>
+        <div class="flex items-center gap-2 text-[11px]">
+          <div class="flex-1">
+            <label class="block text-neutral-500 mb-1">台幣 TWD</label>
+            <input
+              type="number"
+              inputmode="decimal"
+              v-model="fx.twd"
+              @input="updateFromTwd"
+              class="w-full rounded-full border border-neutral-300 px-3 py-1.5 text-[11px] bg-white/80 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+              placeholder="輸入台幣"
+            />
+          </div>
+          <div class="pt-5 text-neutral-500 text-xs">≈</div>
+          <div class="flex-1">
+            <label class="block text-neutral-500 mb-1">日圓 JPY</label>
+            <input
+              type="number"
+              inputmode="decimal"
+              v-model="fx.jpy"
+              @input="updateFromJpy"
+              class="w-full rounded-full border border-neutral-300 px-3 py-1.5 text-[11px] bg-white/80 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+              placeholder="輸入日圓"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 行李清單模式 -->
+    <template v-if="currentMainView === 'packing'">
+      <!-- 進度 + 類別篩選 -->
+      <section class="muji-card px-4 pt-4 pb-3">
+        <div class="relative z-10 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-sm font-semibold text-neutral-900 mb-1">行前打包進度</h2>
+              <p class="text-[11px] text-neutral-500">
+                已完成 {{ checkedCount }} / {{ totalCount }} 項（約 {{ progressPercent }}%）
+              </p>
+            </div>
+            <div class="text-right">
+              <button
+                class="text-[10px] px-2 py-1 rounded-full bg-neutral-900 text-neutral-50 shadow-sm"
+                @click="checkAllVisible(true)"
+              >
+                勾選篩選中
+              </button>
+              <button
+                class="text-[10px] ml-1 px-2 py-1 rounded-full border border-neutral-300 bg-white/80 text-neutral-700"
+                @click="checkAllVisible(false)"
+              >
+                取消篩選中
+              </button>
+            </div>
+          </div>
+
+          <!-- 進度條 -->
+          <div class="w-full h-2.5 rounded-full bg-neutral-200/70 overflow-hidden">
+            <div
+              class="h-full rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-indigo-500 transition-all duration-300"
+              :style="{ width: progressPercent + '%' }"
+            ></div>
+          </div>
+
+          <!-- 類別篩選 -->
+          <div class="flex flex-wrap gap-2 text-[11px] text-neutral-700 mt-2">
+            <button
+              class="pill-filter"
+              :class="filterCategory === 'all' ? 'pill-filter-active' : ''"
+              @click="filterCategory = 'all'"
+            >
+              全部
+            </button>
+            <button
+              class="pill-filter tag-food"
+              :class="filterCategory === 'food' ? 'pill-filter-active' : ''"
+              @click="filterCategory = 'food'"
+            >
+              食
+            </button>
+            <button
+              class="pill-filter tag-clothes"
+              :class="filterCategory === 'clothes' ? 'pill-filter-active' : ''"
+              @click="filterCategory = 'clothes'"
+            >
+              衣
+            </button>
+            <button
+              class="pill-filter tag-stay"
+              :class="filterCategory === 'stay' ? 'pill-filter-active' : ''"
+              @click="filterCategory = 'stay'"
+            >
+              住
+            </button>
+            <button
+              class="pill-filter tag-transport"
+              :class="filterCategory === 'transport' ? 'pill-filter-active' : ''"
+              @click="filterCategory = 'transport'"
+            >
+              行
+            </button>
+            <button
+              class="pill-filter tag-other"
+              :class="filterCategory === 'other' ? 'pill-filter-active' : ''"
+              @click="filterCategory = 'other'"
+            >
+              其他
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 行李項目列表 -->
+      <section class="muji-card px-4 pt-4 pb-3">
+        <div class="relative z-10">
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="text-sm font-semibold text-neutral-900">行李項目</h2>
+            <span class="text-[11px] text-neutral-500">可自行新增 / 編輯</span>
+          </div>
+
+          <!-- 新增項目 -->
+          <div class="flex items-center gap-2 mb-3 text-[11px]">
+            <input
+              v-model="newItemName"
+              type="text"
+              class="flex-1 rounded-full border border-neutral-300 bg-white/80 px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+              placeholder="新增一個行李項目，如：保溫瓶"
+              @keyup.enter="addItem"
+            />
+            <select
+              v-model="newItemCategory"
+              class="rounded-full border border-neutral-300 bg-white/80 px-2 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-neutral-500"
+            >
+              <option value="food">食</option>
+              <option value="clothes">衣</option>
+              <option value="stay">住</option>
+              <option value="transport">行</option>
+              <option value="other">其他</option>
+            </select>
+            <button
+              @click="addItem"
+              class="rounded-full bg-neutral-900 text-neutral-50 px-3 py-1.5 text-[11px] shadow-sm"
+            >
+              加入
+            </button>
+          </div>
+
+          <!-- 清單列表 -->
+          <div class="max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+            <div
+              v-for="(group, gIndex) in groupedItems"
+              :key="gIndex"
+              class="mb-4 last:mb-2"
+            >
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="tag-badge"
+                    :class="categoryClass(group.category)"
+                  >
+                    {{ categoryLabel(group.category) }}
+                  </span>
+                  <p class="text-[11px] text-neutral-500">
+                    {{ group.items.filter(i => i.checked).length }} / {{ group.items.length }} 已勾
+                  </p>
+                </div>
+                <div class="flex items-center gap-1 text-[10px]">
+                  <button
+                    class="px-2 py-0.5 rounded-full border border-neutral-300 bg-white/80"
+                    @click="toggleGroup(group.category, true)"
+                  >
+                    全選
+                  </button>
+                  <button
+                    class="px-2 py-0.5 rounded-full border border-neutral-300 bg-white/80"
+                    @click="toggleGroup(group.category, false)"
+                  >
+                    全不選
+                  </button>
+                </div>
+              </div>
+
+              <ul class="space-y-1.5">
+                <li
+                  v-for="item in group.items"
+                  :key="item.id"
+                  class="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white/80 px-3 py-2 text-[12px]"
+                >
+                  <label class="flex items-center gap-2 flex-1">
+                    <input
+                      type="checkbox"
+                      class="h-3.5 w-3.5 rounded border-neutral-300 text-neutral-900 focus:ring-neutral-700"
+                      v-model="item.checked"
+                    />
+                    <span
+                      class="transition-colors"
+                      :class="item.checked ? 'line-through text-neutral-400' : 'text-neutral-800'"
+                    >
+                      {{ item.name }}
+                    </span>
+                  </label>
+                  <button
+                    class="ml-2 text-[11px] text-neutral-400 hover:text-red-500"
+                    @click="removeItem(item.id)"
+                  >
+                    刪除
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <!-- 行程模式 -->
+    <section
+      v-if="currentMainView === 'itinerary'"
+      class="muji-card px-4 pt-4 pb-3"
+    >
+      <div class="relative z-10">
+        <!-- 日期選擇 + 標籤 legend -->
+        <div class="flex items-center justify-between mb-3 gap-2">
+          <div class="flex gap-2 overflow-x-auto scrollbar-thin pr-1">
+            <button
+              v-for="(day, index) in days"
+              :key="index"
+              class="px-3 py-1.5 text-[11px] rounded-full transition-all whitespace-nowrap"
+              :class="currentDayIndex === index
+                ? 'bg-neutral-900 text-neutral-50 shadow-sm'
+                : 'bg-white/80 text-neutral-600 border border-neutral-200'"
+              @click="currentDayIndex = index"
+            >
+              第 {{ index + 1 }} 天
+            </button>
+          </div>
+          <div class="text-[11px] text-right text-neutral-500 min-w-[120px]">
+            {{ currentDay.date }} · {{ currentDay.city }}
+          </div>
+        </div>
+
+        <!-- 食衣住行圖例 -->
+        <div class="flex flex-wrap gap-2 mb-3 text-[10px] text-neutral-600">
+          <span class="tag-badge tag-food">食</span>
+          <span class="tag-badge tag-clothes">衣 / 逛街</span>
+          <span class="tag-badge tag-stay">住</span>
+          <span class="tag-badge tag-transport">行</span>
+          <span class="tag-badge tag-sight">景點</span>
+          <span class="tag-badge tag-free">自由</span>
+        </div>
+
+        <!-- 時間軸行程 -->
+        <div class="max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin">
+          <ol class="relative border-l border-neutral-200 pl-4">
+            <li
+              v-for="(item, idx) in currentDay.stops"
+              :key="idx"
+              class="mb-4 last:mb-2 relative"
+            >
+              <div class="absolute -left-[6px] mt-1 timeline-dot"></div>
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[11px] font-medium text-neutral-500">
+                    {{ item.time }}
+                  </p>
+                  <p class="text-sm font-semibold text-neutral-900 mt-0.5">
+                    {{ item.title }}
+                  </p>
+                  <p v-if="item.note" class="text-[11px] text-neutral-500 mt-0.5">
+                    {{ item.note }}
+                  </p>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                  <!-- 食衣住行色塊 -->
+                  <span
+                    v-if="item.category"
+                    class="tag-badge"
+                    :class="categoryClass(item.category)"
+                  >
+                    {{ categoryLabel(item.category) }}
+                  </span>
+                  <span
+                    v-else-if="item.tag"
+                    class="muji-pill text-[10px]"
+                  >
+                    {{ item.tag }}
+                  </span>
+
+                  <button
+                    v-if="item.mapUrl"
+                    class="text-[10px] text-sky-700 underline underline-offset-2"
+                    @click="openExternalMap(item.mapUrl)"
+                  >
+                    地圖
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 地圖模式 -->
+    <section
+      v-if="currentMainView === 'map'"
+      class="muji-card px-4 pt-4 pb-4 flex flex-col gap-3"
+    >
+      <div class="relative z-10">
+        <p class="text-[12px] text-neutral-600">
+          點擊下方按鈕，可開啟整理好的 Google 我的地圖，查看所有景點與路線。
+        </p>
+        <button
+          class="w-full py-2.5 mt-1 text-[13px] rounded-full bg-neutral-900 text-neutral-50 font-medium shadow-sm"
+          @click="openMyMap"
+        >
+          在 Google Maps 開啟我的地圖
+        </button>
+        <p class="text-[11px] text-neutral-400">
+          小技巧：開啟後可以把我的地圖加入「已加星號的地點」，之後在 Google Maps 主畫面就可以快速找到。
+        </p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      tripTitle: '熊本 · 九州小旅行',
+      tripDate: '12/28 ～ 1/4',
+      currentMainView: 'packing', // packing / itinerary / map
+      currentDayIndex: 0,
+      myMapUrl: 'https://www.google.com/maps/d/u/0/edit?mid=1YXjJyNyDDuUmN8SwXTAgrjVtihAQwWk&usp=sharing',
+
+      // 航班資訊
+      flightInfo: {
+        depart: {
+          date: '114/12/28',
+          weekday: '六',
+          time: '09:00',
+          flightNo: 'CI198',
+          route: '高雄 KHH → 熊本 KMJ'
+        },
+        return: {
+          date: '115/01/04',
+          weekday: '日',
+          time: '13:25',
+          flightNo: 'CI199',
+          route: '熊本 KMJ → 高雄 KHH'
+        }
+      },
+
+      // 匯率資料
+      fx: {
+        rateTwdToJpy: 4.96,
+        twd: '',
+        jpy: ''
+      },
+
+      // 行程
+      days: [
+        {
+          date: '12/28',
+          city: '熊本半日遊',
+          stops: [
+            { time: '09:00-12:25', title: '抵達熊本', note: '抵達後準備展開熊本第一天行程', category: 'transport' },
+            { time: '12:30', title: 'JR售票處領取 JR Pass', note: '熊本站 JR 售票處領取 5 日 JR Pass（約 15 分鐘）', category: 'transport' },
+            { time: '13:00', title: '前往飯店寄放行李', note: '(JR 水道町) 永安國際精選酒店寄放行李（約 15 分鐘）', category: 'stay' },
+            { time: '13:30', title: '勝烈亭新市街本店 午餐', note: '享用炸豬排午餐（約 60 分鐘）', category: 'food' },
+            { time: '14:30', title: '熊本城', note: '參觀天守閣及博物館，建議停留約 90 分鐘', category: 'sight' },
+            { time: '16:00', title: '城彩苑', note: '逛古風商店街及品嘗小吃，約 60 分鐘', category: 'shopping' },
+            { time: '17:00', title: '古町周邊散步', note: '周邊街區自由探索約 45 分鐘', category: 'free' },
+            { time: '18:00', title: '馬櫻下通店 晚餐', note: '品嘗當地馬肉料理，約 90 分鐘', category: 'food' },
+            { time: '19:30', title: '返回飯店休息', note: '回 (JR 水道町) 永安國際精選酒店休息', category: 'stay' }
+          ]
+        },
+        {
+          date: '12/29',
+          city: '三角一日遊',
+          stops: [
+            { time: '10:21-11:29', title: '搭 JR A 列車前往三角', note: '從熊本搭 JR A 列車前往三角', category: 'transport' },
+            { time: '11:40', title: '千蘭拉麵 午餐', note: '在三角享用拉麵午餐（約 60 分鐘）', category: 'food' },
+            { time: '12:50', title: '三角西港散步', note: '漫步三角西港，欣賞海港風情（約 90 分鐘）', category: 'sight' },
+            { time: '14:20', title: '浦島資料屋', note: '參訪並品嘗起司蛋糕（約 30 分鐘）', category: 'food' },
+            { time: '15:00', title: '三角西港珈琲屋 和蘭館', note: '咖啡休憩約 40 分鐘', category: 'food' },
+            { time: '16:00', title: '搭 JR 返回熊本', note: '約 1 小時車程返回熊本', category: 'transport' },
+            { time: '17:30', title: '熊本晚餐自由安排', note: '市區自由覓食', category: 'food' },
+            { time: '—', title: '宿 永安國際精選酒店', note: '回到熊本同一間住宿', category: 'stay' }
+          ]
+        },
+        {
+          date: '12/30',
+          city: '熊本 → 福岡',
+          stops: [
+            { time: '09:00', title: '熊本前往福岡', note: '搭 JR 移動至福岡，約 2 小時', category: 'transport' },
+            { time: '11:30', title: '抵達福岡・寄放行李', note: '至 APA 飯店（東平博多）寄放行李', category: 'stay' },
+            { time: '12:00', title: '福岡車站周邊美食', note: '藥院燒肉、明太子麵包等', category: 'food' },
+            { time: '14:00', title: '太宰府天滿宮', note: '參拜及參觀，建議停留約 90 分鐘', category: 'sight' },
+            { time: '16:00', title: '市區觀光與逛街', note: '中洲川端商圈、天神地下街等', category: 'shopping' },
+            { time: '18:30', title: '福岡晚餐', note: '推薦博多拉麵或中洲屋台街', category: 'food' },
+            { time: '—', title: '入住 APA 東平站博多飯店', note: '回飯店休息', category: 'stay' }
+          ]
+        },
+        {
+          date: '12/31',
+          city: '福岡 → 門司港',
+          stops: [
+            { time: '09:00', title: '福岡出發前往門司港', note: '約 1 小時車程', category: 'transport' },
+            { time: '10:30', title: '門司港車站與周邊', note: '漫步懷舊建築，約 60 分鐘', category: 'sight' },
+            { time: '11:30', title: '舊門司稅關', note: '免費開放，含咖啡廳休息約 45 分鐘', category: 'sight' },
+            { time: '12:30', title: '海鮮午餐', note: '門司港當地海鮮料理', category: 'food' },
+            { time: '14:00', title: '藍翼吊橋', note: '觀賞開橋秀，停留約 20 分鐘', category: 'sight' },
+            { time: '15:00', title: '門司港海峽廣場', note: '購物休憩約 90 分鐘', category: 'shopping' },
+            { time: '17:00', title: '返回福岡', note: '回福岡市區，晚餐及住宿', category: 'transport' }
+          ]
+        },
+        {
+          date: '1/1',
+          city: '福岡 → 由布院',
+          stops: [
+            { time: '10:11', title: '搭布院之森列車', note: '從福岡搭乘布院之森列車前往由布院，約 2 小時', category: 'transport' },
+            { time: '12:27', title: '抵達由布院・寄放行李', note: '行李寄放於由布院 lamp 住宿', category: 'stay' },
+            { time: '13:00', title: '由布院美術館', note: '預約參觀時間', category: 'sight' },
+            { time: '15:00', title: '湯之坪街道散步', note: '逛老街、品嘗各種小吃', category: 'shopping' },
+            { time: '16:00', title: '自由時間', note: '悠閒享受由布院氛圍', category: 'free' },
+            { time: '—', title: '晚餐與住宿由布院 lamp', note: '回住宿休息', category: 'stay' }
+          ]
+        },
+        {
+          date: '1/2',
+          city: '由布院 → 阿蘇',
+          stops: [
+            { time: '08:00', title: '由布院金鱗湖', note: '早晨散步，之後前往 JR 大分轉乘', category: 'sight' },
+            { time: '11:00', title: '前往阿蘇草千里', note: '約 2 小時車程，途中用餐', category: 'transport' },
+            { time: '13:00', title: '阿蘇草千里', note: '欣賞壯麗草原風光，停留約 90 分鐘', category: 'sight' },
+            { time: '14:30', title: '阿蘇火山博物館', note: '參觀約 60 分鐘', category: 'sight' },
+            { time: '15:30', title: '阿蘇車站周邊', note: '阿蘇牛奶、起司布丁等美食', category: 'food' },
+            { time: '17:00', title: '入住 Fairfield by Marriott Aso', note: '辦理入住休息', category: 'stay' }
+          ]
+        },
+        {
+          date: '1/3',
+          city: '阿蘇 → 熊本',
+          stops: [
+            { time: '09:00', title: '阿蘇周邊散步／溫泉', note: '上午簡單散步或溫泉體驗', category: 'free' },
+            { time: '12:00', title: '搭 JR 返回熊本', note: '約 1.5 小時車程', category: 'transport' },
+            { time: '下午', title: '熊本自由活動', note: '市區自由逛街或購物', category: 'free' },
+            { time: '晚上', title: '熊本晚餐', note: '安排當地美食', category: 'food' },
+            { time: '—', title: '住宿 熊本銀座通大和 Roynet', note: '入住熊本最後一晚', category: 'stay' }
+          ]
+        },
+        {
+          date: '1/4',
+          city: '熊本 → 台灣',
+          stops: [
+            { time: '早上', title: '退房與自由活動', note: '退房後可於附近購買伴手禮', category: 'shopping' },
+            { time: '11:30', title: '前往機場', note: '預留時間至熊本機場', category: 'transport' },
+            { time: '13:25', title: '熊本出發返回台灣', note: '搭機回台，結束旅程', category: 'transport' }
+          ]
+        }
+      ],
+
+      // 行李清單資料
+      filterCategory: 'all',
+      nextId: 1000,
+      items: [
+        // 食
+        { id: 1, name: '保溫瓶 / 水壺', category: 'food', checked: false },
+        { id: 2, name: '隨身零食（堅果、能量棒）', category: 'food', checked: false },
+        { id: 3, name: '胃藥、消化錠', category: 'food', checked: false },
+
+        // 衣
+        { id: 10, name: '外套（防風、防雨）', category: 'clothes', checked: false },
+        { id: 11, name: '上衣與褲子（依天數準備）', category: 'clothes', checked: false },
+        { id: 12, name: '襪子與內衣褲', category: 'clothes', checked: false },
+        { id: 13, name: '睡衣', category: 'clothes', checked: false },
+        { id: 14, name: '帽子 / 圍巾 / 手套', category: 'clothes', checked: false },
+
+        // 住
+        { id: 20, name: '牙刷牙膏 / 牙線', category: 'stay', checked: false },
+        { id: 21, name: '洗面乳 / 卸妝用品', category: 'stay', checked: false },
+        { id: 22, name: '保養品（化妝水、乳液）', category: 'stay', checked: false },
+        { id: 23, name: '隱形眼鏡與保養液', category: 'stay', checked: false },
+        { id: 24, name: '小毛巾、洗澡用品', category: 'stay', checked: false },
+
+        // 行
+        { id: 30, name: '護照與影本', category: 'transport', checked: false },
+        { id: 31, name: '身分證 / 健保卡', category: 'transport', checked: false },
+        { id: 32, name: '機票 / 電子機票截圖', category: 'transport', checked: false },
+        { id: 33, name: 'JR Pass / 車票 / IC 卡', category: 'transport', checked: false },
+        { id: 34, name: '錢包（現金 / 信用卡）', category: 'transport', checked: false },
+        { id: 35, name: '國內外駕照（若需開車）', category: 'transport', checked: false },
+
+        // 其他
+        { id: 40, name: '手機與充電線', category: 'other', checked: false },
+        { id: 41, name: '行動電源', category: 'other', checked: false },
+        { id: 42, name: '相機 / 記憶卡 / 充電器', category: 'other', checked: false },
+        { id: 43, name: '日幣現金與兌換收據', category: 'other', checked: false },
+        { id: 44, name: '常備藥（頭痛、感冒、過敏）', category: 'other', checked: false },
+        { id: 45, name: '雨傘 / 折疊傘', category: 'other', checked: false },
+        { id: 46, name: '口罩與酒精', category: 'other', checked: false }
+      ],
+      newItemName: '',
+      newItemCategory: 'other'
+    };
+  },
+  computed: {
+    currentDay() {
+      return this.days[this.currentDayIndex];
+    },
+    filteredItems() {
+      if (this.filterCategory === 'all') {
+        return this.items;
+      }
+      return this.items.filter(item => item.category === this.filterCategory);
+    },
+    groupedItems() {
+      const groups = {};
+      for (const item of this.filteredItems) {
+        if (!groups[item.category]) {
+          groups[item.category] = [];
+        }
+        groups[item.category].push(item);
+      }
+      return Object.keys(groups).map(cat => ({
+        category: cat,
+        items: groups[cat]
+      }));
+    },
+    totalCount() {
+      return this.items.length;
+    },
+    checkedCount() {
+      return this.items.filter(i => i.checked).length;
+    },
+    progressPercent() {
+      if (this.totalCount === 0) return 0;
+      return Math.round((this.checkedCount / this.totalCount) * 100);
+    }
+  },
+  methods: {
+    openMyMap() {
+      if (this.myMapUrl) {
+        window.open(this.myMapUrl, '_blank');
+      }
+    },
+    openExternalMap(url) {
+      window.open(url, '_blank');
+    },
+    updateFromTwd() {
+      const v = parseFloat(this.fx.twd);
+      if (isNaN(v)) {
+        this.fx.jpy = '';
+        return;
+      }
+      this.fx.jpy = Math.round(v * this.fx.rateTwdToJpy);
+    },
+    updateFromJpy() {
+      const v = parseFloat(this.fx.jpy);
+      if (isNaN(v)) {
+        this.fx.twd = '';
+        return;
+      }
+      if (!this.fx.rateTwdToJpy) {
+        this.fx.twd = '';
+        return;
+      }
+      this.fx.twd = (v / this.fx.rateTwdToJpy).toFixed(0);
+    },
+    categoryClass(cat) {
+      switch (cat) {
+        case 'food': return 'tag-food';
+        case 'clothes': return 'tag-clothes';
+        case 'stay': return 'tag-stay';
+        case 'transport': return 'tag-transport';
+        case 'free': return 'tag-free';
+        case 'sight': return 'tag-sight';
+        case 'shopping': return 'tag-shopping';
+        case 'other': return 'tag-other';
+        default: return '';
+      }
+    },
+    categoryLabel(cat) {
+      switch (cat) {
+        case 'food': return '食';
+        case 'clothes': return '衣';
+        case 'stay': return '住';
+        case 'transport': return '行';
+        case 'free': return '自由';
+        case 'sight': return '景點';
+        case 'shopping': return '逛街 / 購物';
+        case 'other': return '其他';
+        default: return cat;
+      }
+    },
+    addItem() {
+      const name = this.newItemName.trim();
+      if (!name) return;
+      this.items.push({
+        id: this.nextId++,
+        name,
+        category: this.newItemCategory,
+        checked: false
+      });
+      this.newItemName = '';
+    },
+    removeItem(id) {
+      this.items = this.items.filter(i => i.id !== id);
+    },
+    toggleGroup(category, checked) {
+      for (const item of this.items) {
+        if (item.category === category && (this.filterCategory === 'all' || this.filterCategory === category)) {
+          item.checked = checked;
+        }
+      }
+    },
+    checkAllVisible(checked) {
+      for (const item of this.filteredItems) {
+        item.checked = checked;
+      }
+    },
+    resetAllPacking() {
+      for (const item of this.items) {
+        item.checked = false;
+      }
+    }
+  }
+}).mount('#app');
+</script>
+
+</body>
+</html>
